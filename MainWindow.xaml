@@ -1,0 +1,31 @@
+﻿<Window x:Class="Thumbs.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Thumbs" 
+        Height="350" 
+        Width="525">
+    <Grid>
+        <DockPanel>
+            <DockPanel DockPanel.Dock="Top">
+                <Button Content="Refresh"
+                        Width="70"
+                        DockPanel.Dock="Right"
+                        Command="Refresh"/>
+                <ComboBox ItemsSource="{Binding AvailableWindows}"
+                          SelectedValue="{Binding SelectedWindow}"
+                          Name="WindowBox"
+                          SelectedValuePath="Value"
+                          DisplayMemberPath="Key"/>
+            </DockPanel>
+            <DockPanel DockPanel.Dock="Bottom">
+                <Label Content="Opacity:" Margin="5,0"/>
+                <Slider Name="OpacitySlider" 
+                        VerticalAlignment="Center"
+                        Margin="5,0"
+                        Maximum="255"                         
+                        Value="255"/>
+            </DockPanel>
+            <Label/>
+        </DockPanel>
+    </Grid>
+</Window>
