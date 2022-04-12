@@ -1,4 +1,6 @@
-﻿using System.Runtime.InteropServices;
+﻿using System;
+using System.Collections.Generic;
+using System.Runtime.InteropServices;
 
 namespace Thumbs
 {
@@ -35,5 +37,32 @@ namespace Thumbs
     {
         public int x;
         public int y;
+    }
+
+    public struct AvailableWindowInfo
+    {
+        public AvailableWindowInfo(IntPtr _hwnd, IntPtr _thumbHandle)
+        {
+            hwnd = _hwnd;
+            thumbHandle = _thumbHandle;
+        }
+
+        public IntPtr hwnd;
+        public IntPtr thumbHandle;
+    }
+
+    struct TaskManSettings
+    {
+        public bool enabled;
+        public int width;
+        public int height;
+    }
+
+    struct Settings
+    {
+        public List<string> ignore;
+        public bool onTop;
+        public int thumbnailWidth;
+        public TaskManSettings taskMan;
     }
 }

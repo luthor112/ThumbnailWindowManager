@@ -8,8 +8,10 @@ namespace Thumbs
 
     class DWMApi
     {
-        public const int DWM_TNP_VISIBLE = 0x8,
+        public const int DWM_TNP_SOURCECLIENTAREAONLY = 0x10,
+            DWM_TNP_VISIBLE = 0x8,
             DWM_TNP_OPACITY = 0x4,
+            DWM_TNP_RECTSOURCE = 0x2,
             DWM_TNP_RECTDESTINATION = 0x1;
 
         [DllImport("dwmapi.dll")]
