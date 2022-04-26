@@ -87,7 +87,7 @@ namespace Thumbs
             else
                 this.RightPanel.Visibility = Visibility.Collapsed;
 
-            for (int i = 0; i < AvailableWindows.Count; i++)
+            for (int i = 0; i < AvailableWindows.Count && i < (limitNum * 2); i++)
             {
                 KeyValuePair<string, AvailableWindowInfo> awi = AvailableWindows[i];
                 IntPtr _thumbHandle = awi.Value.thumbHandle;
@@ -97,19 +97,22 @@ namespace Thumbs
                 int usedWidth = settings.thumbnailWidth;
                 int usedHeight = settings.thumbnailWidth;
 
-                PSIZE size;
-                DWMApi.DwmQueryThumbnailSourceSize(_thumbHandle, out size);
-                /*if (size.x > size.y)
-                    usedHeight = size.y;
-                else
-                    usedWidth = size.x;*/
+                if (settings.correctRatio)
+                {
+                    PSIZE size;
+                    DWMApi.DwmQueryThumbnailSourceSize(_thumbHandle, out size);
+                    if (size.x > size.y)
+                        usedHeight = (int)(((double)settings.thumbnailWidth / size.x) * size.y);
+                    else
+                        usedWidth = (int)(((double)settings.thumbnailWidth / size.y) * size.x);
+                }
 
                 var props = new DWM_THUMBNAIL_PROPERTIES
                 {
                     fVisible = true,
                     dwFlags = DWMApi.DWM_TNP_VISIBLE | DWMApi.DWM_TNP_RECTDESTINATION | DWMApi.DWM_TNP_OPACITY,
                     opacity = (byte)255,
-                    rcDestination = new Rect(leftPos + 5, topPos + 5, leftPos + 5 + settings.thumbnailWidth, topPos + 5 + settings.thumbnailWidth)
+                    rcDestination = new Rect(leftPos + 5, topPos + 5, leftPos + 5 + usedWidth, topPos + 5 + usedHeight)
                 };
 
                 DWMApi.DwmUpdateThumbnailProperties(_thumbHandle, ref props);

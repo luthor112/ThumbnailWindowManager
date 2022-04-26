@@ -63,6 +63,7 @@ namespace Thumbs
         public List<string> ignore;
         public bool onTop;
         public int thumbnailWidth;
+        public bool correctRatio;
         public TaskManSettings taskMan;
     }
 }
