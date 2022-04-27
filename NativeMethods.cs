@@ -34,7 +34,11 @@ namespace Thumbs
         public const ulong WS_VISIBLE = 0x10000000L,
             WS_BORDER = 0x00800000L,
             TARGETWINDOW = WS_BORDER | WS_VISIBLE;
-        
+
+        public const int SW_SHOW = 5,
+            SW_SHOWNA = 8,
+            SW_RESTORE = 9;
+
         [DllImport("user32.dll")]
         public static extern ulong GetWindowLongA(IntPtr hWnd, int nIndex);
 
@@ -45,6 +49,11 @@ namespace Thumbs
         public static extern void GetWindowText(IntPtr hWnd, StringBuilder lpString, int nMaxCount);
 
         [DllImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
         public static extern bool SetForegroundWindow(IntPtr hWnd);
+
+        [DllImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
     }
 }

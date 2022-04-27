@@ -165,6 +165,7 @@ namespace Thumbs
             if (clickedAwi != null)
             {
                 System.Diagnostics.Debug.WriteLine($"Clicked window: {clickedAwi.title}");
+                User32.ShowWindow(clickedAwi.hwnd, User32.SW_RESTORE);
                 User32.SetForegroundWindow(clickedAwi.hwnd);
             }
         }
