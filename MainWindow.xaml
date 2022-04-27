@@ -13,7 +13,7 @@
     <Window.Background>
         <SolidColorBrush Opacity="0" Color="White"/>
     </Window.Background>
-    <DockPanel>
+    <DockPanel x:Name="FullWindow">
         <!--<Button Content="Refresh"
                         DockPanel.Dock="Top"
                         HorizontalAlignment="Left"

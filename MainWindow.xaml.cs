@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Windows;
 using System.Windows.Input;
@@ -13,9 +14,8 @@ namespace Thumbs
     {
         readonly WindowInteropHelper _wih;
         Settings settings;
-        AvailableWindowInfo taskManInfo;
-
-        public ObservableCollection<KeyValuePair<string, AvailableWindowInfo>> AvailableWindows { get; } = new ObservableCollection<KeyValuePair<string, AvailableWindowInfo>>();
+        List<AvailableWindowInfo> availableWindows = new List<AvailableWindowInfo>();
+        AvailableWindowInfo taskManInfo = null;
 
         public MainWindow()
         {
@@ -32,6 +32,7 @@ namespace Thumbs
 
             Loaded += (s, e) => RefreshWindows();
             SizeChanged += (s, e) => UpdateThumb();
+            this.FullWindow.MouseUp += (s, e) => MouseClick(Mouse.GetPosition(this.FullWindow));
 
             CommandBindings.Add(new CommandBinding(NavigationCommands.Refresh, (s, e) =>
                 {
@@ -41,13 +42,13 @@ namespace Thumbs
 
         void RefreshWindows()
         {
-            for (int i = 0; i < AvailableWindows.Count; i++)
+            for (int i = 0; i < availableWindows.Count; i++)
             {
-                if (AvailableWindows[i].Value.thumbHandle != IntPtr.Zero)
-                    DWMApi.DwmUnregisterThumbnail(AvailableWindows[i].Value.thumbHandle);
+                if (availableWindows[i].thumbHandle != IntPtr.Zero)
+                    DWMApi.DwmUnregisterThumbnail(availableWindows[i].thumbHandle);
             }
 
-            AvailableWindows.Clear();
+            availableWindows.Clear();
 
             User32.EnumWindows((hwnd, e) =>
                 {
@@ -55,7 +56,7 @@ namespace Thumbs
                     {
                         var sb = new StringBuilder(100);
                         User32.GetWindowText(hwnd, sb, sb.Capacity);
-                        System.Diagnostics.Debug.WriteLine(sb.ToString());
+                        System.Diagnostics.Debug.WriteLine($"Window found: {sb.ToString()}" );
 
                         if (!settings.ignore.Contains(sb.ToString().Trim()))
                         {
@@ -63,9 +64,9 @@ namespace Thumbs
                             if (DWMApi.DwmRegisterThumbnail(_wih.Handle, hwnd, out _thumbHandle) == 0)
                             {
                                 if (settings.taskMan.enabled && sb.ToString().Trim().Equals("Task Manager"))
-                                    taskManInfo = new AvailableWindowInfo(hwnd, _thumbHandle);
+                                    taskManInfo = new AvailableWindowInfo(sb.ToString(), hwnd, _thumbHandle);
                                 else
-                                    AvailableWindows.Add(new KeyValuePair<string, AvailableWindowInfo>(sb.ToString(), new AvailableWindowInfo(hwnd, _thumbHandle)));
+                                    availableWindows.Add(new AvailableWindowInfo(sb.ToString(), hwnd, _thumbHandle));
                             }
                         }
                     }
@@ -78,19 +79,19 @@ namespace Thumbs
 
         void UpdateThumb()
         {
-            if (AvailableWindows.Count == 0)
+            if (availableWindows.Count == 0)
                 return;
 
             int limitNum = (int)this.LeftPanel.ActualHeight / (settings.thumbnailWidth + 10);
-            if (AvailableWindows.Count > limitNum || settings.taskMan.enabled)
+            if (availableWindows.Count > limitNum || settings.taskMan.enabled)
                 this.RightPanel.Visibility = Visibility.Visible;
             else
                 this.RightPanel.Visibility = Visibility.Collapsed;
 
-            for (int i = 0; i < AvailableWindows.Count && i < (limitNum * 2); i++)
+            for (int i = 0; i < availableWindows.Count && i < (limitNum * 2); i++)
             {
-                KeyValuePair<string, AvailableWindowInfo> awi = AvailableWindows[i];
-                IntPtr _thumbHandle = awi.Value.thumbHandle;
+                AvailableWindowInfo awi = availableWindows[i];
+                IntPtr _thumbHandle = awi.thumbHandle;
 
                 int leftPos = i >= limitNum ? (int)this.ActualWidth - (settings.thumbnailWidth + 10) : 0;
                 int topPos = (i % limitNum) * (settings.thumbnailWidth + 10);
@@ -107,15 +108,18 @@ namespace Thumbs
                         usedWidth = (int)(((double)settings.thumbnailWidth / size.y) * size.x);
                 }
 
+                Rect boundRect = new Rect(leftPos + 5, topPos + 5, leftPos + 5 + usedWidth, topPos + 5 + usedHeight);
                 var props = new DWM_THUMBNAIL_PROPERTIES
                 {
                     fVisible = true,
                     dwFlags = DWMApi.DWM_TNP_VISIBLE | DWMApi.DWM_TNP_RECTDESTINATION | DWMApi.DWM_TNP_OPACITY,
                     opacity = (byte)255,
-                    rcDestination = new Rect(leftPos + 5, topPos + 5, leftPos + 5 + usedWidth, topPos + 5 + usedHeight)
+                    rcDestination = boundRect
                 };
 
+                System.Diagnostics.Debug.WriteLine($"Bounding rectangle of {awi.title}: {boundRect.Left}x{boundRect.Top} - {boundRect.Right}x{boundRect.Bottom}");
                 DWMApi.DwmUpdateThumbnailProperties(_thumbHandle, ref props);
+                awi.boundRect = boundRect;
             }
 
             if (settings.taskMan.enabled)
@@ -127,16 +131,41 @@ namespace Thumbs
                 int usedWidth = settings.taskMan.width;
                 int usedHeight = settings.taskMan.height;
 
+                Rect boundRect = new Rect(leftPos, topPos, leftPos + usedWidth, topPos + usedHeight);
                 var props = new DWM_THUMBNAIL_PROPERTIES
                 {
                     fVisible = true,
                     dwFlags = DWMApi.DWM_TNP_VISIBLE | DWMApi.DWM_TNP_RECTDESTINATION | DWMApi.DWM_TNP_RECTSOURCE | DWMApi.DWM_TNP_OPACITY,
                     opacity = (byte)255,
-                    rcDestination = new Rect(leftPos, topPos, leftPos + usedWidth, topPos + usedHeight),
+                    rcDestination = boundRect,
                     rcSource = new Rect(5, 88, 5 + usedWidth, 88 + usedHeight)
                 };
 
+                System.Diagnostics.Debug.WriteLine($"Bounding rectangle of {taskManInfo.title}: {boundRect.Left}x{boundRect.Top} - {boundRect.Right}x{boundRect.Bottom}");
                 DWMApi.DwmUpdateThumbnailProperties(_thumbHandle, ref props);
+                taskManInfo.boundRect = boundRect;
+            }
+        }
+
+        void MouseClick(Point coordinates)
+        {
+            System.Diagnostics.Debug.WriteLine($"Mouse click at: {coordinates.X}x{coordinates.Y}");
+
+            AvailableWindowInfo clickedAwi = availableWindows.FirstOrDefault(awi => coordinates.X > awi.boundRect.Left && coordinates.X < awi.boundRect.Right &&
+                                                                                    coordinates.Y > awi.boundRect.Top  && coordinates.Y < awi.boundRect.Bottom);
+            if (settings.taskMan.enabled && taskManInfo != null)
+            {
+                if (coordinates.X > taskManInfo.boundRect.Left && coordinates.X < taskManInfo.boundRect.Right &&
+                    coordinates.Y > taskManInfo.boundRect.Top  && coordinates.Y < taskManInfo.boundRect.Bottom)
+                {
+                    clickedAwi = taskManInfo;
+                }
+            }
+
+            if (clickedAwi != null)
+            {
+                System.Diagnostics.Debug.WriteLine($"Clicked window: {clickedAwi.title}");
+                User32.SetForegroundWindow(clickedAwi.hwnd);
             }
         }
     }

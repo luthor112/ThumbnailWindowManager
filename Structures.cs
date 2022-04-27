@@ -4,6 +4,7 @@ using System.Runtime.InteropServices;
 
 namespace Thumbs
 {
+    #region WinApi
     [StructLayout(LayoutKind.Sequential)]
     struct DWM_THUMBNAIL_PROPERTIES
     {
@@ -38,27 +39,32 @@ namespace Thumbs
         public int x;
         public int y;
     }
+    #endregion
 
-    public struct AvailableWindowInfo
+    #region Application
+    class AvailableWindowInfo
     {
-        public AvailableWindowInfo(IntPtr _hwnd, IntPtr _thumbHandle)
+        public AvailableWindowInfo(string _title, IntPtr _hwnd, IntPtr _thumbHandle)
         {
+            title = _title;
             hwnd = _hwnd;
             thumbHandle = _thumbHandle;
         }
 
+        public string title;
         public IntPtr hwnd;
         public IntPtr thumbHandle;
+        public Rect boundRect;
     }
 
-    struct TaskManSettings
+    class TaskManSettings
     {
         public bool enabled;
         public int width;
         public int height;
     }
 
-    struct Settings
+    class Settings
     {
         public List<string> ignore;
         public bool onTop;
@@ -66,4 +72,5 @@ namespace Thumbs
         public bool correctRatio;
         public TaskManSettings taskMan;
     }
+    #endregion
 }
