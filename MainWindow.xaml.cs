@@ -82,19 +82,15 @@ namespace Thumbs
             if (availableWindows.Count == 0)
                 return;
 
-            int limitNum = (int)this.LeftPanel.ActualHeight / (settings.thumbnailWidth + 10);
-            if (availableWindows.Count > limitNum || settings.taskMan.enabled)
-                this.RightPanel.Visibility = Visibility.Visible;
-            else
-                this.RightPanel.Visibility = Visibility.Collapsed;
+            this.RightPanel.Visibility = Visibility.Collapsed;
 
-            for (int i = 0; i < availableWindows.Count && i < (limitNum * 2); i++)
+            int leftPos = 0;
+            int topPos = 0;
+            for (int i = 0; i < availableWindows.Count; i++)
             {
                 AvailableWindowInfo awi = availableWindows[i];
                 IntPtr _thumbHandle = awi.thumbHandle;
 
-                int leftPos = i >= limitNum ? (int)this.ActualWidth - (settings.thumbnailWidth + 10) : 0;
-                int topPos = (i % limitNum) * (settings.thumbnailWidth + 10);
                 int usedWidth = settings.thumbnailWidth;
                 int usedHeight = settings.thumbnailWidth;
 
@@ -106,6 +102,13 @@ namespace Thumbs
                         usedHeight = (int)(((double)settings.thumbnailWidth / size.x) * size.y);
                     else
                         usedWidth = (int)(((double)settings.thumbnailWidth / size.y) * size.x);
+                }
+
+                if (topPos + usedHeight + 10 > (int)this.ActualHeight)
+                {
+                    topPos = 0;
+                    leftPos = (int)this.ActualWidth - (settings.thumbnailWidth + 10);
+                    this.RightPanel.Visibility = Visibility.Visible;
                 }
 
                 Rect boundRect = new Rect(leftPos + 5, topPos + 5, leftPos + 5 + usedWidth, topPos + 5 + usedHeight);
@@ -120,18 +123,21 @@ namespace Thumbs
                 System.Diagnostics.Debug.WriteLine($"Bounding rectangle of {awi.title}: {boundRect.Left}x{boundRect.Top} - {boundRect.Right}x{boundRect.Bottom}");
                 DWMApi.DwmUpdateThumbnailProperties(_thumbHandle, ref props);
                 awi.boundRect = boundRect;
+
+                topPos = topPos + usedHeight + 10;
             }
 
             if (settings.taskMan.enabled && taskManInfo != null)
             {
+                this.RightPanel.Visibility = Visibility.Visible;
                 IntPtr _thumbHandle = taskManInfo.thumbHandle;
 
-                int leftPos = (int)this.ActualWidth - (settings.taskMan.width + 5);
-                int topPos = (int)this.ActualHeight - (settings.taskMan.height + 5);
+                int tmLeftPos = (int)this.ActualWidth - (settings.taskMan.width + 5);
+                int tmTopPos = (int)this.ActualHeight - (settings.taskMan.height + 5);
                 int usedWidth = settings.taskMan.width;
                 int usedHeight = settings.taskMan.height;
 
-                Rect boundRect = new Rect(leftPos, topPos, leftPos + usedWidth, topPos + usedHeight);
+                Rect boundRect = new Rect(tmLeftPos, tmTopPos, tmLeftPos + usedWidth, tmTopPos + usedHeight);
                 var props = new DWM_THUMBNAIL_PROPERTIES
                 {
                     fVisible = true,
