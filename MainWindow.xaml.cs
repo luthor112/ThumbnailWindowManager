@@ -122,7 +122,7 @@ namespace Thumbs
                 awi.boundRect = boundRect;
             }
 
-            if (settings.taskMan.enabled)
+            if (settings.taskMan.enabled && taskManInfo != null)
             {
                 IntPtr _thumbHandle = taskManInfo.thumbHandle;
 
