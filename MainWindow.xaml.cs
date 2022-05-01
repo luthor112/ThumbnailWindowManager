@@ -25,7 +25,7 @@ namespace Thumbs
 
             _wih = new WindowInteropHelper(this);
 
-            settings = Newtonsoft.Json.JsonConvert.DeserializeObject<Settings>(File.ReadAllText(@"E:\ThumbSettings.json"));
+            settings = Newtonsoft.Json.JsonConvert.DeserializeObject<Settings>(File.ReadAllText(@"ThumbSettings.json"));
             this.ThumbsWindow.Topmost = settings.onTop;
             this.LeftPanel.Width = settings.thumbnailWidth + 10;
             this.RightPanel.Width = settings.thumbnailWidth + 10;

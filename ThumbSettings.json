@@ -1,0 +1,14 @@
+﻿{
+  "ignore": [
+    "",
+    "Settings"
+  ],
+  "onTop": false,
+  "thumbnailWidth": 200,
+  "correctRatio": true,
+  "taskMan": {
+    "enabled": true,
+    "width": 204,
+    "height": 518
+  }
+}
